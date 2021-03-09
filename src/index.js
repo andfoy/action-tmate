@@ -64,14 +64,16 @@ export async function run() {
       newSessionExtra = `-a "${authorizedKeysPath}"`
     }
 
+    await execShellCommand("mkdir tmux_sockets")
+
     core.debug("Creating new session")
-    await execShellCommand(`${tmateExecutable} -S /tmp/tmate.sock ${newSessionExtra} new-session -d`);
-    await execShellCommand(`${tmateExecutable} -S /tmp/tmate.sock wait tmate-ready`);
+    await execShellCommand(`${tmateExecutable} -S tmux_sockets/tmate.sock ${newSessionExtra} new-session -d`);
+    await execShellCommand(`${tmateExecutable} -S tmux_sockets/tmate.sock wait tmate-ready`);
     console.debug("Created new session successfully")
 
     core.debug("Fetching connection strings")
-    const tmateSSH = await execShellCommand(`${tmateExecutable} -S /tmp/tmate.sock display -p '#{tmate_ssh}'`);
-    const tmateWeb = await execShellCommand(`${tmateExecutable} -S /tmp/tmate.sock display -p '#{tmate_web}'`);
+    const tmateSSH = await execShellCommand(`${tmateExecutable} -S tmux_sockets/tmate.sock display -p '#{tmate_ssh}'`);
+    const tmateWeb = await execShellCommand(`${tmateExecutable} -S tmux_sockets/tmate.sock display -p '#{tmate_web}'`);
 
     console.debug("Entering main loop")
     while (true) {
@@ -99,7 +101,7 @@ export async function run() {
 }
 
 function didTmateQuit() {
-  const tmateSocketPath = process.platform === "win32" ? "C:/msys64/tmp/tmate.sock" : "/tmp/tmate.sock"
+  const tmateSocketPath = process.platform === "win32" ? "C:/msys64/tmp/tmate.sock" : "tmux_sockets/tmate.sock"
   return !fs.existsSync(tmateSocketPath)
 }
 
